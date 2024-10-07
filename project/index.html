@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Business Model Canvas Generator</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.5.3/jspdf.debug.js"></script>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 0;
+            background-image: url('background.jpg');
+            background-size: cover;
+            background-position: center;
+        }
+
+        h1 {
+            text-align: center;
+            color: #fff;
+            margin-top: 50px;
+            font-size: 2.5em;
+        }
+
+        #businessIdeaForm {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        label {
+            font-size: 1.2em;
+            color: #fff;
+            margin-bottom: 10px;
+        }
+
+        textarea {
+            width: 80%;
+            max-width: 800px;
+            height: 150px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            padding: 10px;
+            font-size: 1em;
+        }
+
+        button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 1.2em;
+            color: #fff;
+            background-color: #4CAF50;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        #canvasResults {
+            margin: 30px auto;
+            padding: 20px;
+            width: 90%;
+            max-width: 800px;
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            font-size: 1em;
+        }
+
+        .canvas-section {
+            margin-bottom: 20px;
+        }
+
+        .canvas-section h2 {
+            color: #2c3e50;
+            font-size: 1.8em;
+            margin-bottom: 10px;
+            border-bottom: 2px solid #2980b9;
+            padding-bottom: 5px;
+        }
+
+        .canvas-section ul {
+            list-style-type: disc;
+            padding-left: 20px;
+        }
+
+        /* Loading spinner */
+        #loadingSpinner {
+            display: none;
+            margin-top: 20px;
+            border: 8px solid #f3f3f3;
+            border-radius: 50%;
+            border-top: 8px solid #3498db;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        #downloadButtons {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        #downloadButtons button {
+            margin: 0 10px;
+            background-color: #4CAF50;
+            color: #fff;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #downloadButtons button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <h1>Business Model Canvas Generator</h1>
+
+    <form id="businessIdeaForm">
+        <label for="description">Enter your business idea:</label>
+        <textarea id="description" name="description"></textarea>
+        <button type="button" id="generateButton">Generate Canvas</button>
+        <div id="loadingSpinner"></div> <!-- Loading spinner -->
+    </form>
+
+    <div id="canvasResults"></div>
+
+    <div id="downloadButtons">
+        <button id="downloadPdf">Download as PDF</button>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            // Order of sections
+            const sectionOrder = [
+                'Key Partners',
+                'Key Activities',
+                'Key Resources',
+                'Value Propositions',
+                'Customer Segments',
+                'Channels',
+                'Customer Relationships',
+                'Revenue Streams',
+                'Cost Structure',
+                'Competitive Advantage'
+            ];
+
+            $("#generateButton").click(function() {
+                var description = $("#description").val();
+
+                // Show the loading spinner
+                $("#loadingSpinner").show();
+                $("#canvasResults").html(''); // Clear previous results
+
+                $.ajax({
+                    type: 'POST',
+                    url: 'http://127.0.0.1:5000/chat',
+                    data: { description: description },
+                    success: function(response) {
+                        var canvasData = response.canvas;
+
+                        // Clear any previous results
+                        $("#canvasResults").html('');
+
+                        // Loop through the ordered sections
+                        sectionOrder.forEach(function(section) {
+                            var sectionKey = section.replace(/ /g, '_').toLowerCase();
+
+                            if (canvasData[sectionKey]) {
+                                var sectionContent = '<div class="canvas-section"><h2>' + section + '</h2><ul>';
+
+                                // Convert the content to an array of items
+                                var items = canvasData[sectionKey].split(/(?<!\*)\* /).filter(function(item) {
+                                    return item.trim() !== "";
+                                });
+
+                                // Create the list of items under each section
+                                items.forEach(function(item) {
+                                    sectionContent += '<li>' + item.trim() + '</li>';
+                                });
+
+                                sectionContent += '</ul></div>';
+
+                                // Append the section to the results container
+                                $("#canvasResults").append(sectionContent);
+                            }
+                        });
+                    },
+                    error: function(error) {
+                        console.error('Error generating canvas:', error);
+                        $("#canvasResults").html('<p>An error occurred while generating the canvas.</p>');
+                    },
+                    complete: function() {
+                        // Hide the loading spinner
+                        $("#loadingSpinner").hide();
+                    }
+                });
+            });
+
+            // Download as PDF
+            $("#downloadPdf").click(function() {
+                var doc = new jsPDF();
+                doc.fromHTML($("#canvasResults").html(), 15, 15, {
+                    'width': 170
+                });
+                doc.save('business_model_canvas.pdf');
+            });
+        });
+    </script>
+</body>
+</html>
