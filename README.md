@@ -2,8 +2,8 @@
 ## Business Model Canvas Generator
 ### This Project is a strategic tool for developing new business models or documenting existing ones.
 - Consists of key areas such as Value Propositions, Key Activities, Customer Segments, etc.
-- we provide an AI-driven webbased tool that assists users in generating a comprehensive BMC automatically from a basic idea input.
-### project architecture and future work
+- we provide an AI-driven web based tool that assists users in generating a comprehensive BMC automatically from a basic idea input.
+### Project architecture and future work
 - Frontend: Dynamic interaction through JavaScript (jQuery) and HTML/CSS.
 - Backend: Flask server handles requests and responses.
 - Database: SQLite stores BMC data for each user.
@@ -12,5 +12,5 @@
 ### how to use
 - Run bmc.py it will start the server on port: http://127.0.0.1:5000
 - Open index.html 
-- Type business idea in the description textbox ( hint: deveice should be connected to internet )
+- Type the business idea in the description textbox ( hint: device should be connected to internet )
 - Have fun ^_^
